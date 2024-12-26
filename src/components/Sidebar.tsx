@@ -6,11 +6,15 @@ import { useAppSelector } from '@/redux/store'
 import { useDispatch } from 'react-redux'
 import { setChats, setSelectedGroup, setSelectedTopic } from '@/redux/features/chatsSlice'
 import ThemeSwitcher from './Themes'
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 
 type Props = {
   showSidebar: boolean,
   setShowSidebar: (showSidebar: boolean) => void
 }
+
+const ITEM_TYPE = 'TOPIC';
 
 const Sidebar = (props: Props) => {
   const { chats, activeGroup, activeTopic } = useAppSelector(state => state.chats)
@@ -19,9 +23,9 @@ const Sidebar = (props: Props) => {
   const [isCreatingTopic, setIsCreatingTopic] = useState(false);
   const [newTopic, setNewTopic] = useState('');
   const [actionGroup, setActionGroup] = useState('');
-  const [isEditingTopic, setIsEditingTopic] = useState(false); 
-  const [editTopicValue, setEditTopicValue] = useState(''); 
-  const [editTopicGroup, setEditTopicGroup] = useState(''); 
+  const [isEditingTopic, setIsEditingTopic] = useState(false);
+  const [editTopicValue, setEditTopicValue] = useState('');
+  const [editTopicGroup, setEditTopicGroup] = useState('');
   const [themeSwitch, setThemeSwitch] = useState(false);
   const dispatch = useDispatch();
 
@@ -40,14 +44,14 @@ const Sidebar = (props: Props) => {
     }
   };
 
-  const handleKeyPressTopic = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPressTopic = (event: any) => {
     if (event.key === 'Enter') {
-      handleCreateNewTopic();
+      handleCreateNewTopic(event.target.value);
     }
   };
 
   const handleCreateNew = () => {
-    if(!newGroup) return;
+    if (!newGroup) return;
     setIsCreating(false);
     const newChats = JSON.parse(JSON.stringify(chats));
     newChats[newGroup] = {};
@@ -66,8 +70,8 @@ const Sidebar = (props: Props) => {
     setActionGroup(group);
   }
 
-  const handleCreateNewTopic = () => {
-    if(!newTopic) return;
+  const handleCreateNewTopic = (newTopic: string) => {
+    if (!newTopic) return;
     setIsCreatingTopic(false);
     const newChats = JSON.parse(JSON.stringify(chats));
     newChats[actionGroup][newTopic] = [];
@@ -80,17 +84,17 @@ const Sidebar = (props: Props) => {
     setActionGroup(group);
     setEditTopicValue(topic);
     setEditTopicGroup(topic);
-    setIsEditingTopic(true); // Enable topic edit mode
+    setIsEditingTopic(true);
   };
 
-  const handleSaveEditedTopic = () => {
-    if (!editTopicValue) return; // Don't save empty topics
+  const handleSaveEditedTopic = (editTopicValue: string) => {
+    if (!editTopicValue) return;
     const newChats = JSON.parse(JSON.stringify(chats));
-    delete newChats[actionGroup][activeTopic]; // Delete the old topic
-    newChats[actionGroup][editTopicValue] = []; // Add new topic with updated name
+    delete newChats[actionGroup][activeTopic];
+    newChats[actionGroup][editTopicValue] = [];
     dispatch(setChats(newChats));
-    setIsEditingTopic(false); // Exit edit mode
-    dispatch(setSelectedTopic(editTopicValue)); // Update the selected topic
+    setIsEditingTopic(false);
+    dispatch(setSelectedTopic(editTopicValue));
   };
 
   const handleReset = () => {
@@ -99,7 +103,7 @@ const Sidebar = (props: Props) => {
     setNewGroup('');
     setNewTopic('');
     setActionGroup('');
-    setIsEditingTopic(false); // Reset edit mode
+    setIsEditingTopic(false);
     setEditTopicValue('');
     setEditTopicGroup('');
   }
@@ -109,57 +113,97 @@ const Sidebar = (props: Props) => {
     dispatch(setSelectedTopic(topic));
   }
 
-  return (
-    <div className='sidebar-container' onClick={handleReset}>
-      <ViewKanban className="sidebar-icon" onClick={() => props.setShowSidebar(!props.showSidebar)} />
+  const moveTopic = (sourceGroup: string, targetGroup: string, topic: string) => {
+    if (sourceGroup === targetGroup) return;
 
-        {themeSwitch ? <ThemeSwitcher /> : <div onClick={()=> setThemeSwitch(true)} className='mt-8 cursor-pointer hover:underline'>Switch Theme?</div>}
-      <div className='chats-container'>
-        {chats ? Object.keys(chats).map((group, index) => (
-          <div key={index}>
-            <div className='chats-groups mt-2'>
-              {group}
-              <Add style={{ cursor: 'pointer' }} onClick={(e) => handleCreateNewTopicClick(e, group)} />
+    const newChats = JSON.parse(JSON.stringify(chats));
+    newChats[targetGroup][topic] = newChats[sourceGroup][topic];
+    dispatch(setSelectedGroup(targetGroup));
+    dispatch(setSelectedTopic(topic));
+    delete newChats[sourceGroup][topic];
+
+    dispatch(setChats(newChats));
+  };
+  
+
+  const Group = ({ group }: { group: string }) => {
+    const [, drop] = useDrop(() => ({
+      accept: ITEM_TYPE,
+      drop: (item: { group: string; topic: string }) => moveTopic(item.group, group, item.topic),
+    }));
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      // setNewTopic(e.target.value);
+    };
+
+    return (
+      <div ref={drop}>
+        <div className='chats-groups mt-2'>
+          {group}
+          <Add style={{ cursor: 'pointer' }} onClick={(e) => handleCreateNewTopicClick(e, group)} />
+        </div>
+        {isCreatingTopic && actionGroup === group && <div className='mb-5'>
+          <TextField onClick={(e) => e.stopPropagation()} onChange={handleChange} onKeyDown={handleKeyPressTopic} label="Topic Name" variant="standard" fullWidth />
+        </div>}
+        {chats && Object.keys(chats[group]).map((topic, index) => (
+          <Topic key={index} group={group} topic={topic} />
+        ))}
+      </div>
+    );
+  };
+
+  const Topic = ({ group, topic }: { group: string; topic: string }) => {
+    const [, drag] = useDrag(() => ({
+      type: ITEM_TYPE,
+      item: { group, topic },
+    }));
+
+    return (
+      isEditingTopic && actionGroup === group && editTopicGroup === topic ?
+            <div className='edit-topic-container'>
+              <TextField
+                // value={editTopicValue}
+                onClick={(e) => e.stopPropagation()}
+                // onChange={(e) => setEditTopicValue(e.target.value)}
+                label={editTopicValue}
+                variant="standard"
+                fullWidth
+                onKeyDown={(e: any) => e.key === 'Enter' && handleSaveEditedTopic(e.target.value)}
+              />
             </div>
-            {isCreatingTopic && actionGroup === group && <div className='mb-5'>
-              <TextField onClick={(e) => e.stopPropagation()} onChange={(e) => setNewTopic(e.target.value)} onKeyDown={handleKeyPressTopic} label="Topic Name" variant="standard" fullWidth />
-            </div>}
-            {chats[group] && Object.keys(chats[group]).map((topic, index) => (
-              isEditingTopic && actionGroup === group && editTopicGroup === topic ?
-                <div key={index} className='edit-topic-container'>
-                  <TextField
-                    value={editTopicValue}
-                    onClick={(e) => e.stopPropagation()}
-                    onChange={(e) => setEditTopicValue(e.target.value)}
-                    label="Edit Topic"
-                    variant="standard"
-                    fullWidth
-                    onKeyDown={(e) => e.key === 'Enter' && handleSaveEditedTopic()}
-                  />
-                </div>
-                :
-                <div key={index} className={`chats-titles mt-1 ${activeTopic === topic ? "active" : null}`} onClick={() => handleSelect(group, topic)}>
-                  <div className='flex items-center gap-2'>
-                    <ArrowForwardIos style={{ fontSize: '12px' }} />
-                    <div className='chats-titles-text'>{topic}</div>
-                  </div>
-                  <Edit style={{cursor:"pointer", fontSize:"16px"}} onClick={(e) => { e.stopPropagation(); handleEditTopicClick(group, topic); }}/>
-                </div>
-            ))}
+            :
+            <div ref={drag} className={`chats-titles mt-1 ${activeTopic === topic ? "active" : null}`} onClick={() => handleSelect(group, topic)}>
+              <div className='flex items-center gap-2'>
+                <ArrowForwardIos style={{ fontSize: '12px' }} />
+                <div className='chats-titles-text'>{topic}</div>
+              </div>
+              <Edit style={{ cursor: "pointer", fontSize: "16px" }} onClick={(e) => { e.stopPropagation(); handleEditTopicClick(group, topic); }} />
+            </div>
+    );
+  };
+
+  return (
+    <DndProvider backend={HTML5Backend}>
+      <div className='sidebar-container' onClick={handleReset}>
+        <ViewKanban className="sidebar-icon" onClick={() => props.setShowSidebar(!props.showSidebar)} />
+        {themeSwitch ? <ThemeSwitcher /> : <div onClick={() => setThemeSwitch(true)} className='mt-8 cursor-pointer hover:underline'>Switch Theme?</div>}
+
+
+        <div className='chats-container'>
+          {chats ? Object.keys(chats).map((group, index) => (
+            <Group key={index} group={group} />
+          )) : null}
+          <div className='mt-5 w-full'>
+            {isCreating ?
+              <TextField onClick={(e) => e.stopPropagation()} onChange={(e) => setNewGroup(e.target.value)} onKeyDown={handleKeyPress} label="Group Name" variant="standard" fullWidth />
+              : <Button onClick={handleCreateNewGroup} style={{ display: "flex", flexDirection: "row", gap: "6px", alignItems: "center" }} fullWidth>New Group <Add /></Button>}
           </div>
-        )) : null}
-        <div className='mt-5 w-full'>
-          {isCreating ?
-            <TextField onClick={(e) => e.stopPropagation()} onChange={(e) => setNewGroup(e.target.value)} onKeyDown={handleKeyPress} label="Group Name" variant="standard" fullWidth />
-            : <Button onClick={handleCreateNewGroup} style={{ display: "flex", flexDirection: "row", gap: "6px", alignItems: "center" }} fullWidth>New Group <Add /></Button>}
+        </div>
+        <div className='logout-container'>
+          <Button fullWidth onClick={logout}>Logout</Button>
         </div>
       </div>
-      <div className='logout-container'>
-        <Button fullWidth onClick={logout}>Logout</Button>
-      </div>
-
-
-    </div>
+    </DndProvider>
   )
 }
 

@@ -48,7 +48,7 @@ function Home() {
     dispatch(setChats(newChats));
   }, []);
 
-  const chatActive = activeGroup && activeTopic && chats ? chats[activeGroup] && chats[activeGroup][activeTopic].length > 0? true :false :false;
+  const chatActive = activeGroup && activeTopic && chats ? chats[activeGroup] && chats[activeGroup][activeTopic]?.length > 0? true :false :false;
 
   return (
     <div>
