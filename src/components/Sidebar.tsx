@@ -1,5 +1,5 @@
 import { Button, TextField } from '@mui/material'
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import "../../styles/sidebar.css"
 import { Add, ArrowForwardIos, Edit, ViewKanban } from '@mui/icons-material'
 import { useAppSelector } from '@/redux/store'
@@ -124,20 +124,29 @@ const Sidebar = (props: Props) => {
 
     dispatch(setChats(newChats));
   };
-  
 
-  const Group = ({ group }: { group: string }) => {
+  interface GroupProps {
+    group: string;
+  }
+
+  const Group: React.FC<GroupProps> = ({ group }) => {
     const [, drop] = useDrop(() => ({
       accept: ITEM_TYPE,
       drop: (item: { group: string; topic: string }) => moveTopic(item.group, group, item.topic),
     }));
+
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      drop(ref.current);
+    }, [drop]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       // setNewTopic(e.target.value);
     };
 
     return (
-      <div ref={drop}>
+      <div ref={ref}>
         <div className='chats-groups mt-2'>
           {group}
           <Add style={{ cursor: 'pointer' }} onClick={(e) => handleCreateNewTopicClick(e, group)} />
@@ -152,33 +161,44 @@ const Sidebar = (props: Props) => {
     );
   };
 
-  const Topic = ({ group, topic }: { group: string; topic: string }) => {
+  interface TopicProps {
+    group: string;
+    topic: string;
+  }
+  
+  const Topic: React.FC<TopicProps> = ({ group, topic }) => {
     const [, drag] = useDrag(() => ({
       type: ITEM_TYPE,
       item: { group, topic },
     }));
 
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      drag(ref.current);
+    }, [drag]);
+
     return (
       isEditingTopic && actionGroup === group && editTopicGroup === topic ?
-            <div className='edit-topic-container'>
-              <TextField
-                // value={editTopicValue}
-                onClick={(e) => e.stopPropagation()}
-                // onChange={(e) => setEditTopicValue(e.target.value)}
-                label={editTopicValue}
-                variant="standard"
-                fullWidth
-                onKeyDown={(e: any) => e.key === 'Enter' && handleSaveEditedTopic(e.target.value)}
-              />
-            </div>
-            :
-            <div ref={drag} className={`chats-titles mt-1 ${activeTopic === topic ? "active" : null}`} onClick={() => handleSelect(group, topic)}>
-              <div className='flex items-center gap-2'>
-                <ArrowForwardIos style={{ fontSize: '12px' }} />
-                <div className='chats-titles-text'>{topic}</div>
-              </div>
-              <Edit style={{ cursor: "pointer", fontSize: "16px" }} onClick={(e) => { e.stopPropagation(); handleEditTopicClick(group, topic); }} />
-            </div>
+        <div className='edit-topic-container'>
+          <TextField
+            // value={editTopicValue}
+            onClick={(e) => e.stopPropagation()}
+            // onChange={(e) => setEditTopicValue(e.target.value)}
+            label={editTopicValue}
+            variant="standard"
+            fullWidth
+            onKeyDown={(e: any) => e.key === 'Enter' && handleSaveEditedTopic(e.target.value)}
+          />
+        </div>
+        :
+        <div ref={ref} className={`chats-titles mt-1 ${activeTopic === topic ? "active" : null}`} onClick={() => handleSelect(group, topic)}>
+          <div className='flex items-center gap-2'>
+            <ArrowForwardIos style={{ fontSize: '12px' }} />
+            <div className='chats-titles-text'>{topic}</div>
+          </div>
+          <Edit style={{ cursor: "pointer", fontSize: "16px" }} onClick={(e) => { e.stopPropagation(); handleEditTopicClick(group, topic); }} />
+        </div>
     );
   };
 
