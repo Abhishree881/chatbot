@@ -28,6 +28,7 @@ const ThemeSwitcher = () => {
             onClick={() => handleThemeChange(theme.class)}
             style={{
               background: `linear-gradient(45deg, ${theme.colors.join(", ")})`,
+              color: theme.colors[0],
             }}
           >
             {theme.name}
