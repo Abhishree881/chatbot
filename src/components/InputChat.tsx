@@ -5,12 +5,14 @@ import { useAppSelector } from '@/redux/store'
 import { useDispatch } from 'react-redux'
 import { setChats } from '@/redux/features/chatsSlice'
 
-type Props = {}
+type Props = {
+  loading: boolean
+  setLoading: (loading: boolean) => void
+}
 
 const InputChat = (props: Props) => {
     const [input, setInput] = useState("")
     const {chats, activeGroup, activeTopic} = useAppSelector((state) => state.chats);
-    const [loading, setLoading] = useState(false)
     const dispatch = useDispatch();
 
     const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -20,12 +22,15 @@ const InputChat = (props: Props) => {
       };
 
     const handleSendClick = async () => {
+        props.setLoading(true);
         const newChats =  JSON.parse(JSON.stringify(chats));
         newChats[activeGroup][activeTopic].push({
             user_type: "user",
             id: `id-${Date.now()}`,
             text: input
         })
+        // dispatch(setChats(newChats))
+        
         try {
           const res = await fetch('/api/chat', {
             method: 'POST',
@@ -44,11 +49,12 @@ const InputChat = (props: Props) => {
         } catch (error) {
           console.error('Error:', error);
         } finally {
-          setLoading(false);
+          props.setLoading(false);
         }
         dispatch(setChats(newChats))
         setInput("")
     }
+
   return (
     <div className='chat-input-container'>
         <TextField value={input} onChange={(e) => setInput(e.target.value)} fullWidth variant='standard' onKeyDown={handleKeyPress}/>

@@ -3,7 +3,7 @@ import { createSlice } from "@reduxjs/toolkit";
 type ChatObj = {
     user_type: string,
     id: string
-    text: number,
+    text: string,
 }
 
 type TopicChats = {

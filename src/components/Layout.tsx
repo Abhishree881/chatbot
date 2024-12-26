@@ -11,7 +11,7 @@ const Layout = (props: Props) => {
   return (
     <div className='flex flex-row'> 
       {showSidebar && <Sidebar showSidebar={showSidebar} setShowSidebar={setShowSidebar} />}
-      <div className='relative w-full'>
+      <div className='relative w-full h-screen'>
         {!showSidebar ? <ViewKanbanIcon className="sidebar-icon" onClick={() => setShowSidebar(!showSidebar)} /> : null}
         {props.children}
       </div>

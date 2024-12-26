@@ -58,3 +58,21 @@
     transform: translateX(0%);
   }
 }
+
+@media (max-width: 900px) {
+  .sidebar-container{
+    position: absolute;
+    top: 0;
+    left: 0;
+    min-width: 350px;
+    width: 25vw;
+    z-index: 999;
+  }
+}
+
+@media (max-width: 300px) {
+  .sidebar-container{
+    min-width: 250px;
+    width: 250px;
+  }
+}

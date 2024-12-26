@@ -5,12 +5,13 @@ import Layout from "@/components/Layout";
 import { setChats, setSelectedGroup, setSelectedTopic } from "@/redux/features/chatsSlice";
 import { useAppSelector } from "@/redux/store";
 import { withAuth } from "@/utils/withAuth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 
 function Home() {
   const user = useAppSelector((state) => state.user.user);
   const {chats, activeTopic, activeGroup} = useAppSelector((state) => state.chats);
+  const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -62,8 +63,13 @@ function Home() {
                   </div>
                 </div>
               ))}
+              {loading && <div style={{display: "contents"}}>
+                  <div className="text-left">
+                    Loading...
+                  </div>
+                </div>}
             </div>}
-          {activeGroup && activeTopic && chats ? chats[activeGroup] && chats[activeGroup][activeTopic]? <div className={`${chatActive? "chat-input active": 'chat-input'}`}><InputChat/></div> :null : null}
+          {activeGroup && activeTopic && chats ? chats[activeGroup] && chats[activeGroup][activeTopic]? <div className={`${chatActive? "chat-input active": 'chat-input'}`}><InputChat loading={loading} setLoading={setLoading}/></div> :null : null}
         </div>
       </Layout>
     </div>
