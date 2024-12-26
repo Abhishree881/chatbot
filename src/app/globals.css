@@ -3,23 +3,82 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --secondary-background: #f3f2f5;
-  --title-bg: #87898980;
-  --title-active-bg: #828282;
-}
-
-.dark-theme {
-  --background: #0a0a0a;
-  --foreground: #ededed;
-}
+	--background: #ffffff;
+	--foreground: #171717;
+	--secondary-background: #f3f2f5;
+	--title-bg: #87898980;
+	--title-active-bg: #828282;
+  }
+  
+  .theme-light {
+	--background: #ffffff;
+	--foreground: #171717;
+	--secondary-background: #f3f2f5;
+	--title-bg: #87898980;
+	--title-active-bg: #828282;
+  }
+  
+  .theme-dark {
+	--background: #171717;
+	--foreground: #ffffff;
+	--secondary-background: #2c2c2c;
+	--title-bg: #55555580;
+	--title-active-bg: #888888;
+  }
+  
+  .theme-blue {
+	--background: #e6f7ff;
+	--foreground: #35789b;
+	--secondary-background: #cceeff;
+	--title-bg: #80d4ff80;
+	--title-active-bg: #6999b9;
+  }
+  
+  .theme-green {
+	--background: #e8f5e9;
+	--foreground: #1b5e20;
+	--secondary-background: #c8e6c9;
+	--title-bg: #80e27e80;
+	--title-active-bg: #2e7d32;
+  }  
 
 body {
   color: var(--foreground);
   background: var(--background);
   font-family: 'DM Sans', sans-serif;
 }
+
+.theme-switcher {
+	text-align: center;
+  }
+  
+  .theme-options {
+	display: flex;
+	justify-content: center;
+	gap: 16px;
+	margin-top: 20px;
+  }
+  
+  .theme-preview {
+	width: 40px;
+	height: 40px;
+	border-radius: 8px;
+	font-size: smaller;
+	border-radius: 8px;
+	cursor: pointer;
+	border: 2px solid transparent;
+	transition: transform 0.2s, border-color 0.2s;
+  }
+  
+  .theme-preview.active {
+	border-color: var(--foreground);
+	transform: scale(1.1);
+  }
+  
+  .theme-preview:hover {
+	transform: scale(1.05);
+  }
+  
 
 
 .login-box {

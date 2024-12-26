@@ -5,6 +5,7 @@ import { Add, ArrowForwardIos, Edit, ViewKanban } from '@mui/icons-material'
 import { useAppSelector } from '@/redux/store'
 import { useDispatch } from 'react-redux'
 import { setChats, setSelectedGroup, setSelectedTopic } from '@/redux/features/chatsSlice'
+import ThemeSwitcher from './Themes'
 
 type Props = {
   showSidebar: boolean,
@@ -21,6 +22,7 @@ const Sidebar = (props: Props) => {
   const [isEditingTopic, setIsEditingTopic] = useState(false); 
   const [editTopicValue, setEditTopicValue] = useState(''); 
   const [editTopicGroup, setEditTopicGroup] = useState(''); 
+  const [themeSwitch, setThemeSwitch] = useState(false);
   const dispatch = useDispatch();
 
   const logout = async () => {
@@ -110,6 +112,8 @@ const Sidebar = (props: Props) => {
   return (
     <div className='sidebar-container' onClick={handleReset}>
       <ViewKanban className="sidebar-icon" onClick={() => props.setShowSidebar(!props.showSidebar)} />
+
+        {themeSwitch ? <ThemeSwitcher /> : <div onClick={()=> setThemeSwitch(true)} className='mt-8 cursor-pointer hover:underline'>Switch Theme?</div>}
       <div className='chats-container'>
         {chats ? Object.keys(chats).map((group, index) => (
           <div key={index}>
