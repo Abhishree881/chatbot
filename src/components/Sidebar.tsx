@@ -90,8 +90,8 @@ const Sidebar = (props: Props) => {
   const handleSaveEditedTopic = (editTopicValue: string) => {
     if (!editTopicValue) return;
     const newChats = JSON.parse(JSON.stringify(chats));
+    newChats[actionGroup][editTopicValue] = newChats[actionGroup][activeTopic];
     delete newChats[actionGroup][activeTopic];
-    newChats[actionGroup][editTopicValue] = [];
     dispatch(setChats(newChats));
     setIsEditingTopic(false);
     dispatch(setSelectedTopic(editTopicValue));
